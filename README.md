@@ -1,39 +1,42 @@
 # je4
 Owned by mmec-ca.
 
-Cloudflare Worker + Durable Object site served at `erd.mmec.ca/je4/`.
-Built-in support for multiplayer games: static assets, WebSocket signaling,
-and in-memory state via a Durable Object.
+Cloudflare Worker with Durable Object support, served at `erd.mmec.ca/je4/`.
 
-## Structure
+## Architecture
 
-- `_site/je4/index.html` — static game client (inline HTML/JS/Canvas).
-- `src/worker.js` — Worker entry. Routes `*/api/signal/ws` to the DO,
-  serves everything else from `_site/` via `env.ASSETS`.
-- `src/signaling-do.js` — `SignalingRoom` Durable Object. In-memory WebSocket
-  hub with peer-join/leave notifications and signal relay (WebRTC-friendly).
-- `wrangler.jsonc` — Worker config with route, DO binding, and SQLite migration.
-
-## Deploy
-
-Pushes to `main` auto-deploy via GitHub Actions.
-Required repo secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`.
-
-Manual deploy from a local checkout:
-```
-npx wrangler@4 deploy
-```
+- **Worker entry**: `src/worker.js` — routes dynamic requests (WebSocket upgrades under
+  `*/api/signal/ws`) to a Durable Object; serves static assets via `env.ASSETS` for
+  everything else.
+- **Durable Object**: declared under `durable_objects.bindings` in `wrangler.jsonc`,
+  implemented under `src/`. In-memory by default; use `ctx.storage` for persistent
+  state (check the `migrations` block in `wrangler.jsonc` for whether the class is
+  KV-backed `new_classes` or SQLite-backed `new_sqlite_classes`).
+- **Static assets**: served from the directory declared in `wrangler.jsonc` under
+  `assets.directory`.
 
 ## Signaling endpoint
 
 `wss://erd.mmec.ca/je4/api/signal/ws?peerId=<id>[&room=<code>]`
 
-- No `room` param → peers are auto-grouped by WAN IP (all devices on the same
-  home router/LAN join the same room).
-- `room=<code>` → explicit room code (for QR-scan joining across networks).
+- No `room` param → peers auto-group by WAN IP (same network → same room).
+- With `room=<code>` → explicit room joining, e.g. via a QR code.
 
-## Adding persistent state
+## Deploy
 
-The template DO uses in-memory state only (lost on hibernation). For persistent
-state, use `ctx.storage.sql` (SQLite-backed — declared via `new_sqlite_classes`
-in the `migrations` block of `wrangler.jsonc`).
+Pushes to `main` auto-deploy via GitHub Actions (`.github/workflows/deploy.yml`).
+Required repo secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`.
+
+Manual deploy:
+```
+npx wrangler@4 deploy
+```
+
+## Versioning
+
+Every code change gets a new version tag in the format `YYYY-MM-DD-aa`.
+
+- The date is the calendar date the change was made.
+- The suffix starts at `-aa` for the first change on a given day, then increments: `-ab`, `-ac`, `-ad`, …
+- The suffix resets to `-aa` on each new day.
+- The current version is declared as `const VERSION` near the top of `je4/game.js` and displayed in the top-left of the lobby.

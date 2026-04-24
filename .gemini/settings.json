@@ -1,5 +1,12 @@
 {
-  "includeDirectories": [
-    "/workspaces/"
-  ]
+  "context": {
+    "includeDirectories": [
+      "/workspaces/"
+    ]
+  },
+  "tools": {
+    "sandboxAllowedPaths": [
+      "/workspaces/"
+    ]
+  }
 }
