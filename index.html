@@ -1,11 +1,211 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="refresh" content="0; url=/je4/" />
-    <title>Redirecting...</title>
-  </head>
-  <body>
-    <p>Redirecting to <a href="/je4/">/je4/</a></p>
-  </body>
-</html>
+1 <!DOCTYPE html>
+        2 <html lang="en">
+        3 <head>
+        4     <meta charset="UTF-8">
+        5     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        6     <title>Glassmorphic Calculator</title>
+        7     <!-- React & Babel CDNs -->
+        8     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+        9     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+       10     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+       11     
+       12     <style>
+       13         :root {
+       14             --glass-bg: rgba(255, 255, 255, 0.1);
+       15             --glass-border: rgba(255, 255, 255, 0.2);
+       16             --accent: #00d2ff;
+       17             --text: #ffffff;
+       18         }
+       19
+       20         * {
+       21             margin: 0;
+       22             padding: 0;
+       23             box-sizing: border-box;
+       24             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+       25         }
+       26
+       27         body {
+       28             height: 100vh;
+       29             display: flex;
+       30             justify-content: center;
+       31             align-items: center;
+       32             background: linear-gradient(45deg, #0f0c29, #302b63, #24243e);
+       33             overflow: hidden;
+       34         }
+       35
+       36         #root {
+       37             z-index: 1;
+       38         }
+       39
+       40         .calculator {
+       41             background: var(--glass-bg);
+       42             backdrop-filter: blur(15px);
+       43             -webkit-backdrop-filter: blur(15px);
+       44             border: 1px solid var(--glass-border);
+       45             border-radius: 20px;
+       46             padding: 20px;
+       47             width: 320px;
+       48             box-shadow: 0 25px 45px rgba(0, 0, 0, 0.2);
+       49         }
+       50
+       51         .display {
+       52             width: 100%;
+       53             height: 80px;
+       54             background: rgba(0, 0, 0, 0.2);
+       55             border: none;
+       56             border-radius: 10px;
+       57             margin-bottom: 20px;
+       58             padding: 15px;
+       59             text-align: right;
+       60             display: flex;
+       61             flex-direction: column;
+       62             justify-content: flex-end;
+       63             color: var(--text);
+       64             overflow: hidden;
+       65         }
+       66
+       67         .history {
+       68             font-size: 0.9rem;
+       69             opacity: 0.6;
+       70             height: 20px;
+       71         }
+       72
+       73         .current {
+       74             font-size: 2rem;
+       75             font-weight: 300;
+       76         }
+       77
+       78         .buttons {
+       79             display: grid;
+       80             grid-template-columns: repeat(4, 1fr);
+       81             gap: 12px;
+       82         }
+       83
+       84         button {
+       85             height: 60px;
+       86             border: 1px solid var(--glass-border);
+       87             border-radius: 12px;
+       88             background: var(--glass-bg);
+       89             color: var(--text);
+       90             font-size: 1.2rem;
+       91             cursor: pointer;
+       92             transition: 0.2s;
+       93             display: flex;
+       94             justify-content: center;
+       95             align-items: center;
+       96         }
+       97
+       98         button:hover {
+       99             background: rgba(255, 255, 255, 0.2);
+      100             transform: translateY(-2px);
+      101         }
+      102
+      103         button:active {
+      104             transform: translateY(0);
+      105         }
+      106
+      107         button.operator {
+      108             background: rgba(0, 210, 255, 0.1);
+      109             color: var(--accent);
+      110             font-weight: bold;
+      111         }
+      112
+      113         button.equals {
+      114             grid-column: span 2;
+      115             background: var(--accent);
+      116             color: #000;
+      117             border: none;
+      118             font-weight: bold;
+      119         }
+      120
+      121         button.clear {
+      122             grid-column: span 2;
+      123             color: #ff4b2b;
+      124         }
+      125     </style>
+      126 </head>
+      127 <body>
+      128     <div id="root"></div>
+      129
+      130     <script type="text/babel">
+      131         const { useState } = React;
+      132
+      133         function Calculator() {
+      134             const [display, setDisplay] = useState('0');
+      135             const [history, setHistory] = useState('');
+      136             const [shouldReset, setShouldReset] = useState(false);
+      137
+      138             const handleNumber = (num) => {
+      139                 if (display === '0' || shouldReset) {
+      140                     setDisplay(num);
+      141                     setShouldReset(false);
+      142                 } else {
+      143                     setDisplay(display + num);
+      144                 }
+      145             };
+      146
+      147             const handleOperator = (op) => {
+      148                 setHistory(display + ' ' + op);
+      149                 setShouldReset(true);
+      150             };
+      151
+      152             const calculate = () => {
+      153                 if (!history || shouldReset) return;
+      154                 
+      155                 try {
+      156                     const expression = history + ' ' + display;
+      157                     // Note: In a production app, use a safer math parser
+      158                     const result = eval(expression.replace('×', '*').replace('÷', '/'));
+      159                     setDisplay(String(Number(result.toFixed(8))));
+      160                     setHistory('');
+      161                     setShouldReset(true);
+      162                 } catch (e) {
+      163                     setDisplay('Error');
+      164                     setHistory('');
+      165                     setShouldReset(true);
+      166                 }
+      167             };
+      168
+      169             const clear = () => {
+      170                 setDisplay('0');
+      171                 setHistory('');
+      172             };
+      173
+      174             return (
+      175                 <div className="calculator">
+      176                     <div className="display">
+      177                         <div className="history">{history}</div>
+      178                         <div className="current">{display}</div>
+      179                     </div>
+      180                     <div className="buttons">
+      181                         <button className="clear" onClick={clear}>C</button>
+      182                         <button className="operator" onClick={() => handleOperator('÷')}>÷</button>
+      183                         <button className="operator" onClick={() => handleOperator('×')}>×</button>
+      184                         
+      185                         <button onClick={() => handleNumber('7')}>7</button>
+      186                         <button onClick={() => handleNumber('8')}>8</button>
+      187                         <button onClick={() => handleNumber('9')}>9</button>
+      188                         <button className="operator" onClick={() => handleOperator('-')}>-</button>
+      189                         
+      190                         <button onClick={() => handleNumber('4')}>4</button>
+      191                         <button onClick={() => handleNumber('5')}>5</button>
+      192                         <button onClick={() => handleNumber('6')}>6</button>
+      193                         <button className="operator" onClick={() => handleOperator('+')}>+</button>
+      194                         
+      195                         <button onClick={() => handleNumber('1')}>1</button>
+      196                         <button onClick={() => handleNumber('2')}>2</button>
+      197                         <button onClick={() => handleNumber('3')}>3</button>
+      198                         <button onClick={() => handleNumber('0')}>0</button>
+      199                         
+      200                         <button onClick={() => handleNumber('.')}>.</button>
+      201                         <button className="equals" onClick={calculate}>=</button>
+      202                     </div>
+      203                 </div>
+      204             );
+      205         }
+      206
+      207         const root = ReactDOM.createRoot(document.getElementById('root'));
+      208         root.render(<Calculator />);
+      209     </script>
+      210 </body>
+      211 </html>
